@@ -36,6 +36,14 @@
     Kicks the specified player from the team. <br />
     This command can only be used by the team owner.
 
+- **/team ban [PlayerName]** <br />
+    Bans a player from the team, if the player is currently in the team it kicks them as well. Banned players cannot join the team if the team is public, and cannot be invited to the team. <br />
+    This command can only be used by the team owner.
+
+- **/team unban [PlayerName]** <br />
+    Unbans a player from the team. <br />
+    This command can only be used by the team owner.
+  
 - **/team invites** <br />
     Shows all team invites you have received.
 
