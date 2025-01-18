@@ -25,7 +25,7 @@ import java.util.*;
 @Mod(modid = SimpleTeams.MODID, version = SimpleTeams.VERSION, name = SimpleTeams.NAME, serverSideOnly = true, acceptableRemoteVersions = "*")
 public class SimpleTeams {
     public static final String MODID = "simpleteams";
-    public static final String VERSION = "0.0.2";
+    public static final String VERSION = "0.0.3";
     public static final String NAME = "SimpleTeams";
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -89,7 +89,7 @@ public class SimpleTeams {
 
         @Override
         public String getUsage(ICommandSender sender) {
-            return "/team <create|invite|invites|toggle|join|leave|changeowner|info>";
+            return "/team <create|invite|invites|toggle|join|leave|changeowner|info|kick|ban|unban>";
         }
 
         @Override
@@ -113,7 +113,7 @@ public class SimpleTeams {
             UUID playerUUID = player.getUniqueID();
 
             if (args.length < 1) {
-                sender.sendMessage(new TextComponentString(TextFormatting.RED + "/team <create|invite|invites|toggle|join|leave|changeowner|info>"));
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + "/team <create|invite|invites|toggle|join|leave|changeowner|info|kick|ban|unban>"));
                 return;
             }
 
@@ -145,13 +145,20 @@ public class SimpleTeams {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "Player not found."));
                         return;
                     }
+
                     if (!playerTeams.containsKey(playerUUID)) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not in a team."));
                         return;
                     }
                     SimpleTeams.Team currentTeam = teams.get(playerTeams.get(playerUUID));
+
                     if (!currentTeam.isOwner(playerUUID)) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not the team owner."));
+                        return;
+                    }
+
+                    if (currentTeam.isPlayerBanned(invitee.getUniqueID())) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + invitee.getName() + " is banned from this team and cannot be invited."));
                         return;
                     }
                     pendingInvites.get(invitee.getUniqueID()).add(currentTeam.name);
@@ -161,7 +168,7 @@ public class SimpleTeams {
 
                 case "kick":
                     if (args.length < 2) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team kick <teammember>"));
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team kick <teamMember>"));
                         return;
                     }
 
@@ -172,14 +179,11 @@ public class SimpleTeams {
                         return;
                     }
 
-                    // Check if the sender is the team owner
                     if (!playerTeams.containsKey(playerUUID)) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not in a team."));
                         return;
                     }
 
-
-                    // Get the team the sender belongs to
                     currentTeam = teams.get(playerTeams.get(playerUUID));
 
                     if (!currentTeam.isOwner(playerUUID)) {
@@ -192,19 +196,22 @@ public class SimpleTeams {
                         return;
                     }
 
-                    // Check if the target player is in the same team
                     if (!SimpleTeams.Team.arePlayersInSameTeam(targetPlayer, player)) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + targetPlayerName + " is not in your team."));
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + targetPlayer.getName() + " is not in your team."));
                         return;
                     }
 
-                    // Remove the target player from the team
                     playerTeams.remove(targetPlayer.getUniqueID());
-                    currentTeam.members.remove(targetPlayer.getUniqueID());
-                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + targetPlayerName + " has been kicked from the team."));
+                    currentTeam.removeMember(targetPlayer.getUniqueID());
 
-                    // Notify the kicked player
-                    targetPlayer.sendMessage(new TextComponentString(TextFormatting.RED + "You have been kicked from the team " + currentTeam.name + "."));
+                    String kickMessage = TextFormatting.RED + targetPlayer.getName() + " has been kicked from the team.";
+
+                    sendMessageToTeamMembers(server, kickMessage, currentTeam);
+
+                    // Optionally notify the kicked player
+                    if (targetPlayer != null) {
+                        targetPlayer.sendMessage(new TextComponentString(TextFormatting.RED + "You have been kicked from the team."));
+                    }
                     break;
 
                 case "invites":
@@ -249,25 +256,39 @@ public class SimpleTeams {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team join [teamName]"));
                         return;
                     }
+
                     teamName = args[1];
                     SimpleTeams.Team teamToJoin = teams.get(teamName);
 
-                    if (playerTeams.getOrDefault(player.getUniqueID(), null) != null) {
+                    if (playerTeams.getOrDefault(playerUUID, null) != null) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are already in a team!"));
                         return;
                     }
+
                     if (teamToJoin == null) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "That team does not exist."));
                         return;
                     }
+
                     if (!teamToJoin.isPublic && !pendingInvites.get(playerUUID).contains(teamName)) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not invited to this team."));
                         return;
                     }
+
+                    if (teamToJoin.isPlayerBanned(playerUUID)) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are banned from this team and cannot join."));
+                        return;
+                    }
+
+                    String joinMessage = TextFormatting.GREEN + player.getName() + " has joined the team.";
+
+                    sendMessageToTeamMembers(server, joinMessage, teamToJoin);
+
                     playerTeams.put(playerUUID, teamName);
-                    teamToJoin.addMember(playerUUID, player.getName());  // Add member name to team
+                    teamToJoin.addMember(playerUUID, player.getName());
                     pendingInvites.get(playerUUID).remove(teamName);
                     sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "You have joined team " + teamName + "."));
+
                     break;
 
                 case "leave":
@@ -291,12 +312,12 @@ public class SimpleTeams {
                         teams.remove(currentTeam.name);
                         playerTeams.remove(playerUUID);
                         currentTeam.removeMember(playerUUID);  // Remove member from team
-                        sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "You have left and disbanded the team " + currentTeam.name + "."));
+                        sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "You have left and disbanded the team " + currentTeam.name + "."));
                     } else {
                         // Non-owner leaving the team
                         playerTeams.remove(playerUUID);
                         currentTeam.removeMember(playerUUID);  // Remove member from team
-                        sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "You have left the team."));
+                        sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "You have left the team."));
                     }
                     break;
 
@@ -321,7 +342,12 @@ public class SimpleTeams {
                         return;
                     }
                     currentTeam.setOwner(newOwner.getUniqueID(), newOwner.getName());  // Store new owner's name
-                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Ownership transferred to " + newOwnerName + "."));
+                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Ownership transferred to " + newOwner.getName() + "."));
+
+                    String changeMessage = TextFormatting.GOLD + sender.getName() + " has transferred ownership of the team to " + newOwner.getName();
+
+                    sendMessageToTeamMembers(server, changeMessage, currentTeam);
+
                     break;
 
                 case "info":
@@ -339,11 +365,11 @@ public class SimpleTeams {
 
                     // Get the owner's name (even if offline)
                     ownerName = currentTeam.getOwnerName();
-                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Team Name: " + currentTeam.name));
-                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Owner: " + ownerName));
-                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Public: " + currentTeam.isPublic));
-                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Friendly Fire: " + currentTeam.friendlyFire));
-                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + "Members: " + String.join(", ", teamMembers)));
+                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Team Name: " + TextFormatting.GREEN + currentTeam.name));
+                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Owner: " + TextFormatting.GREEN + ownerName));
+                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Public: " + TextFormatting.GREEN + currentTeam.isPublic));
+                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Friendly Fire: " + TextFormatting.GREEN + currentTeam.friendlyFire));
+                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Members: " + TextFormatting.GREEN +String.join(", ", teamMembers)));
                     break;
 
                 case "list":
@@ -359,23 +385,119 @@ public class SimpleTeams {
                     if (publicTeams.isEmpty()) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "There are no public teams."));
                     } else {
-                        sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Public Teams: " + String.join(", ", publicTeams)));
+                        sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Public Teams: " + TextFormatting.GREEN + String.join(", ", publicTeams)));
                     }
+                    break;
+
+                case "ban":
+                    if (args.length < 2) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team ban <playerName>"));
+                        return;
+                    }
+
+
+                    if (!playerTeams.containsKey(playerUUID)) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not in a team."));
+                        return;
+                    }
+
+                    currentTeam = teams.get(playerTeams.get(playerUUID));
+                    if (!currentTeam.isOwner(playerUUID)) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not the team owner."));
+                        return;
+                    }
+
+                    targetPlayerName = args[1];
+                    targetPlayer = server.getPlayerList().getPlayerByUsername(targetPlayerName);
+                    if (targetPlayer == null) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Player not found."));
+                        return;
+                    }
+
+                    if (currentTeam.isOwner(targetPlayer.getUniqueID())) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You cannot ban yourself from the team, you are the team owner!"));
+                        return;
+                    }
+
+                    String banMessage = TextFormatting.RED + targetPlayer.getName() + " has been kicked and banned from the team.";
+
+                    if (SimpleTeams.Team.arePlayersInSameTeam(targetPlayer, player)) {
+                        playerTeams.remove(targetPlayer.getUniqueID());
+                        currentTeam.removeMember(targetPlayer.getUniqueID());
+                        sendMessageToTeamMembers(server, banMessage, currentTeam);
+                        targetPlayer.sendMessage(new TextComponentString(TextFormatting.RED + "You have been kicked and banned from the team " + currentTeam.name + "."));
+                    } else {
+                        banMessage = TextFormatting.RED + targetPlayer.getName() + " has been banned from the team.";
+                        sendMessageToTeamMembers(server, banMessage, currentTeam);
+                    }
+
+                    currentTeam.banPlayer(targetPlayer.getUniqueID());
+                    break;
+
+                case "unban":
+                    if (args.length < 2) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team unban <playerName>"));
+                        return;
+                    }
+
+                    if (!playerTeams.containsKey(playerUUID)) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not in a team."));
+                        return;
+                    }
+
+                    currentTeam = teams.get(playerTeams.get(playerUUID));
+                    if (!currentTeam.isOwner(playerUUID)) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not the team owner."));
+                        return;
+                    }
+
+                    targetPlayerName = args[1];
+                    targetPlayer = server.getPlayerList().getPlayerByUsername(targetPlayerName);
+                    if (targetPlayer == null) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Player not found."));
+                        return;
+                    }
+
+                    if (!currentTeam.isPlayerBanned(targetPlayer.getUniqueID())) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + targetPlayer.getName() + " is not banned from the team."));
+                        return;
+                    }
+
+                    currentTeam.unbanPlayer(targetPlayer.getUniqueID());
+                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + targetPlayer.getName() + " has been unbanned from the team."));
+
+                    targetPlayer.sendMessage(new TextComponentString(TextFormatting.GREEN + "You have been unbanned from the team " + currentTeam.name + "."));
+
                     break;
 
                 default:
                     sender.sendMessage(new TextComponentString(TextFormatting.RED + "Unknown subcommand."));
             }
         }
+
+        public static void sendMessageToTeamMembers(MinecraftServer server, String message, Team currentTeam) {
+            // Iterate over all players in the team
+            for (Map.Entry<UUID, String> entry : playerTeams.entrySet()) {
+                if (entry.getValue().equals(currentTeam.name)) {
+                    EntityPlayer member = server.getPlayerList().getPlayerByUUID(entry.getKey());
+                    if (member != null) {
+                        member.sendMessage(new TextComponentString(message));
+                    }
+                }
+            }
+        }
+
+
     }
 
     public static class Team implements Serializable {
         private final String name;
         private UUID owner;
-        private String ownerName;  // Store the owner's name
+        private String ownerName;
         private boolean isPublic;
         private boolean friendlyFire;
-        private final Map<UUID, String> members;  // Store members' UUIDs and names
+        private final Map<UUID, String> members;
+        private final List<UUID> bannedPlayers;
 
         public Team(String name, UUID owner, String ownerName) {
             this.name = name;
@@ -385,6 +507,7 @@ public class SimpleTeams {
             this.friendlyFire = false;
             this.members = new HashMap<>();
             this.members.put(owner, ownerName);  // Add the owner as a member initially
+            this.bannedPlayers = new ArrayList<>();
         }
 
         public boolean isOwner(UUID uuid) {
@@ -401,11 +524,11 @@ public class SimpleTeams {
         }
 
         public void addMember(UUID memberUUID, String memberName) {
-            members.put(memberUUID, memberName);  // Add member to the list
+            members.put(memberUUID, memberName);
         }
 
         public void removeMember(UUID memberUUID) {
-            members.remove(memberUUID);  // Remove member from the list
+            members.remove(memberUUID);
         }
 
         public Map<UUID, String> getMembers() {
@@ -422,6 +545,20 @@ public class SimpleTeams {
 
         public void toggleFriendlyFire() {
             this.friendlyFire = !this.friendlyFire;
+        }
+
+        public boolean isPlayerBanned(UUID playerUUID) {
+            return bannedPlayers.contains(playerUUID);
+        }
+
+        public void banPlayer(UUID playerUUID) {
+            if (!bannedPlayers.contains(playerUUID)) {
+                bannedPlayers.add(playerUUID);
+            }
+        }
+
+        public void unbanPlayer(UUID playerUUID) {
+            bannedPlayers.remove(playerUUID);
         }
 
         public static boolean arePlayersInSameTeam(EntityPlayer player1, EntityPlayer player2) {
