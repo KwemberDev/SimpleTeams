@@ -1,8 +1,8 @@
 # SimpleTeams
 
-## SimpleTeams is a simple server-side mod that allows players to join or create a team. Players in the same team cannot directly damage eachother! Perfect for coop playthroughs, especially on heavily modded modpacks!
+## SimpleTeams is a simple server-side mod that allows players to join or create a team. Players in the same team cannot directly damage each other! Perfect for co-op playthroughs, especially on heavily modded modpacks!
 
-### Damage sources that will not damage the player when they come from a team member include but not limited to:
+### Damage sources that WILL NOT damage the player when they come from a team member include but not limited to:
 -   Direct hits, sword or other.
 -   Arrows fired by a player.
 -   TNT ignited by a player (with flint and steel or arrow).
@@ -16,38 +16,39 @@
 -   Any other way you might want to prank your friend.
 
 
-### Commands:
 
-- /team create <TeamName>
-    Creates a team with the specified name. Newly created teams are private by default. Newly created teams have friendly fire turned off by default. The player that created the team is owner by default.
+## Commands:
 
-- /team join <TeamName> 
+- **/team create [TeamName]** <br />
+    Creates a team with the specified name. Newly created teams are private by default. Newly created teams have friendly fire turned off by default. The player that created the team is the team owner by default.
+
+- **/team join [TeamName]** <br />
     If the specified team is public, using this command will join the specified team if the player is not already in a team. If a team is NOT public, the player needs an invite first.
 
-- /team leave
+- **/team leave** <br />
     Leaves your current team. If you are the owner of the team and your team is not empty, you cannot leave the team until all members have been kicked or have left, or until you have tranfered ownership of the team to another team member.
 
-- /team invite <PlayerName>
-    Invite the specified player to your team.
+- **/team invite [PlayerName]** <br />
+    Invite the specified player to your team. <br />
     This command can only be used by the team owner.
 
-- /team kick <TeamMember>
-    Kicks the specified player from the team.
+- **/team kick [TeamMember]** <br />
+    Kicks the specified player from the team. <br />
     This command can only be used by the team owner.
 
-- /team invites
+- **/team invites** <br />
     Shows all team invites you have received.
 
-- /team toggle [public | hurt]
-    Toggles if the team is public or private, or toggles if friendly fire is enabled or disabled.
+- **/team toggle [public | hurt]** <br />
+    Toggles if the team is public or private, or toggles if friendly fire is enabled or disabled. <br />
     This command can only be used by the team owner.
 
-- /team changeowner <TeamMember>
-    Transfers ownership of the team to the specified team member. 
+- **/team changeowner [TeamMember]** <br />
+    Transfers ownership of the team to the specified team member. <br />
     This command can only be used by the team owner.
 
-- /team info
-    Shows information about your current team, including the owner, the members, and the status of the publicity and the friendly fire.
+- **/team info** <br />
+    Shows information about your current team, including the owner, the members, and the status of the publicity and friendly fire.
 
-- /team list
+- **/team list** <br />
     Shows a list of all public teams on the server.
