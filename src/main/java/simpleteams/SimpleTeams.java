@@ -25,7 +25,7 @@ import java.util.*;
 @Mod(modid = SimpleTeams.MODID, version = SimpleTeams.VERSION, name = SimpleTeams.NAME, serverSideOnly = true, acceptableRemoteVersions = "*")
 public class SimpleTeams {
     public static final String MODID = "simpleteams";
-    public static final String VERSION = "Beta 0.0.1";
+    public static final String VERSION = "0.0.2";
     public static final String NAME = "SimpleTeams";
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -157,6 +157,54 @@ public class SimpleTeams {
                     pendingInvites.get(invitee.getUniqueID()).add(currentTeam.name);
                     invitee.sendMessage(new TextComponentString(TextFormatting.GOLD + "You have been invited to join team " + currentTeam.name + "."));
                     sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Player invited."));
+                    break;
+
+                case "kick":
+                    if (args.length < 2) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team kick <teammember>"));
+                        return;
+                    }
+
+                    String targetPlayerName = args[1];
+                    EntityPlayer targetPlayer = server.getPlayerList().getPlayerByUsername(targetPlayerName);
+                    if (targetPlayer == null) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Player not found."));
+                        return;
+                    }
+
+                    // Check if the sender is the team owner
+                    if (!playerTeams.containsKey(playerUUID)) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not in a team."));
+                        return;
+                    }
+
+
+                    // Get the team the sender belongs to
+                    currentTeam = teams.get(playerTeams.get(playerUUID));
+
+                    if (!currentTeam.isOwner(playerUUID)) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not the team owner."));
+                        return;
+                    }
+
+                    if (currentTeam.isOwner(targetPlayer.getUniqueID())) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You cannot kick yourself, you are the team owner."));
+                        return;
+                    }
+
+                    // Check if the target player is in the same team
+                    if (!SimpleTeams.Team.arePlayersInSameTeam(targetPlayer, player)) {
+                        sender.sendMessage(new TextComponentString(TextFormatting.RED + targetPlayerName + " is not in your team."));
+                        return;
+                    }
+
+                    // Remove the target player from the team
+                    playerTeams.remove(targetPlayer.getUniqueID());
+                    currentTeam.members.remove(targetPlayer.getUniqueID());
+                    sender.sendMessage(new TextComponentString(TextFormatting.GREEN + targetPlayerName + " has been kicked from the team."));
+
+                    // Notify the kicked player
+                    targetPlayer.sendMessage(new TextComponentString(TextFormatting.RED + "You have been kicked from the team " + currentTeam.name + "."));
                     break;
 
                 case "invites":
