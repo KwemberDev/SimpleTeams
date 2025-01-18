@@ -9,7 +9,7 @@
 -   Indirect sweeping attacks by a player.
 -   Any other attack where the True Damage source is a team member.
 
-### Damage sources that WILL dmage the player even when they come from a team member include but not limited to:
+### Damage sources that WILL damage the player even when they come from a team member include but not limited to:
 -   Falling anvils
 -   Fall damage caused by breaking blocks underneath another player
 -   TNT ignited by redstone
