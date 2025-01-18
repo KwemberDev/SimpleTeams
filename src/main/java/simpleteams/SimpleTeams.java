@@ -42,7 +42,7 @@ public class SimpleTeams {
         loadTeams();
         event.registerServerCommand(new TeamCommand());
         MinecraftForge.EVENT_BUS.register(this);
-        MinecraftForge.EVENT_BUS.register(new DamageHandler());  // Register DamageHandler here
+        MinecraftForge.EVENT_BUS.register(new DamageHandler());
     }
 
     @SubscribeEvent
@@ -94,7 +94,7 @@ public class SimpleTeams {
 
         @Override
         public int getRequiredPermissionLevel() {
-            return 0; // allows non operator players to use the command.
+            return 0;
         }
 
         @Override
@@ -128,8 +128,8 @@ public class SimpleTeams {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "A team with that name already exists."));
                         return;
                     }
-                    String ownerName = player.getName();  // Get the owner's name
-                    teams.put(teamName, new SimpleTeams.Team(teamName, playerUUID, ownerName));  // Store the name along with UUID
+                    String ownerName = player.getName();
+                    teams.put(teamName, new SimpleTeams.Team(teamName, playerUUID, ownerName));
                     playerTeams.put(playerUUID, teamName);
                     sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Team " + teamName + " created!"));
                     break;
@@ -208,7 +208,6 @@ public class SimpleTeams {
 
                     sendMessageToTeamMembers(server, kickMessage, currentTeam);
 
-                    // Optionally notify the kicked player
                     if (targetPlayer != null) {
                         targetPlayer.sendMessage(new TextComponentString(TextFormatting.RED + "You have been kicked from the team."));
                     }
@@ -298,25 +297,21 @@ public class SimpleTeams {
                     }
                     currentTeam = teams.get(playerTeams.get(playerUUID));
 
-                    // Check if the player is the team owner
                     if (currentTeam.isOwner(playerUUID)) {
                         long memberCount = playerTeams.values().stream().filter(teamName2 -> teamName2.equals(currentTeam.name)).count();
 
-                        // Allow the owner to leave only if they are the only member
                         if (memberCount > 1) {
                             sender.sendMessage(new TextComponentString(TextFormatting.RED + "You cannot leave your own team unless you transfer ownership or remove all other members."));
                             return;
                         }
 
-                        // Remove team and player mapping
                         teams.remove(currentTeam.name);
                         playerTeams.remove(playerUUID);
-                        currentTeam.removeMember(playerUUID);  // Remove member from team
+                        currentTeam.removeMember(playerUUID);
                         sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "You have left and disbanded the team " + currentTeam.name + "."));
                     } else {
-                        // Non-owner leaving the team
                         playerTeams.remove(playerUUID);
-                        currentTeam.removeMember(playerUUID);  // Remove member from team
+                        currentTeam.removeMember(playerUUID);
                         sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "You have left the team."));
                     }
                     break;
@@ -358,12 +353,10 @@ public class SimpleTeams {
                     currentTeam = teams.get(playerTeams.get(playerUUID));
                     List<String> teamMembers = new ArrayList<>();
 
-                    // Gather all members of the team using stored member names (including offline players)
                     for (Map.Entry<UUID, String> entry : currentTeam.getMembers().entrySet()) {
-                        teamMembers.add(entry.getValue());  // Use the stored name
+                        teamMembers.add(entry.getValue());
                     }
 
-                    // Get the owner's name (even if offline)
                     ownerName = currentTeam.getOwnerName();
                     sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Team Name: " + TextFormatting.GREEN + currentTeam.name));
                     sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Owner: " + TextFormatting.GREEN + ownerName));
