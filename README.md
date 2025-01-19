@@ -49,7 +49,7 @@
     Shows all team invites you have received.
 
 - **/team toggle [public | hurt]** <br />
-    Toggles if the team is public or private, or toggles if friendly fire is enabled or disabled. Any player can join public teams unless they are banned from said team. **If friendly fire is enabled, players in that team can hurt eachother like normal.** <br />
+    Toggles if the team is public or private, or toggles if friendly fire is enabled or disabled. Any player can join public teams unless they are banned from said team. **If friendly fire is enabled, players in that team can hurt each other like normal.** <br />
     This command can only be used by the team owner.
 
 - **/team changeowner [TeamMember]** <br />
