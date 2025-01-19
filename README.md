@@ -7,8 +7,9 @@
 -   Arrows fired by a player.
 -   TNT ignited by a player (with flint and steel or arrow).
 -   Indirect sweeping attacks by a player.
+-   Any other attack where the True Damage source is a team member.
 
-### Damage sources that WILL dmage the player even when they come from a team member include but not limited to:
+### Damage sources that WILL damage the player even when they come from a team member include but not limited to:
 -   Falling anvils
 -   Fall damage caused by breaking blocks underneath another player
 -   TNT ignited by redstone
@@ -20,7 +21,7 @@
 ## Commands:
 
 - **/team create [TeamName]** <br />
-    Creates a team with the specified name. Newly created teams are private by default. Newly created teams have friendly fire turned off by default. The player that created the team is the team owner by default.
+    Creates a team with the specified name. Newly created teams are private by default. Newly created teams have friendly fire turned off by default. The player that created the team is the team owner by default. Team names are case sensitive.
 
 - **/team join [TeamName]** <br />
     If the specified team is public, using this command will join the specified team if the player is not already in a team. If a team is NOT public, the player needs an invite first.
@@ -48,7 +49,7 @@
     Shows all team invites you have received.
 
 - **/team toggle [public | hurt]** <br />
-    Toggles if the team is public or private, or toggles if friendly fire is enabled or disabled. <br />
+    Toggles if the team is public or private, or toggles if friendly fire is enabled or disabled. Any player can join public teams unless they are banned from said team. **If friendly fire is enabled, players in that team can hurt each other like normal.** <br />
     This command can only be used by the team owner.
 
 - **/team changeowner [TeamMember]** <br />
