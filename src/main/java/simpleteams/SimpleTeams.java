@@ -18,6 +18,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import simpleteams.handler.DamageHandler;
 
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.io.*;
 import java.nio.file.Files;
 import java.util.*;
@@ -25,10 +26,12 @@ import java.util.*;
 @Mod(modid = SimpleTeams.MODID, version = SimpleTeams.VERSION, name = SimpleTeams.NAME, serverSideOnly = true, acceptableRemoteVersions = "*")
 public class SimpleTeams {
     public static final String MODID = "simpleteams";
-    public static final String VERSION = "0.0.3";
+    public static final String VERSION = "0.0.4";
     public static final String NAME = "SimpleTeams";
     public static final Logger LOGGER = LogManager.getLogger();
 
+    //TODO maybe add a teams chat?
+    
     @Instance(MODID)
     public static SimpleTeams instance;
 
@@ -88,8 +91,9 @@ public class SimpleTeams {
         }
 
         @Override
+        @ParametersAreNonnullByDefault
         public String getUsage(ICommandSender sender) {
-            return "/team <create|invite|invites|toggle|join|leave|changeowner|info|kick|ban|unban>";
+            return "/team <create|join|leave|invite|toggle|kick|ban|unban|info|changeowner|invites>";
         }
 
         @Override
@@ -98,11 +102,13 @@ public class SimpleTeams {
         }
 
         @Override
+        @ParametersAreNonnullByDefault
         public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
             return true;
         }
 
         @Override
+        @ParametersAreNonnullByDefault
         public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
             if (!(sender instanceof EntityPlayer)) {
                 sender.sendMessage(new TextComponentString("This command can only be used by players."));
@@ -113,9 +119,15 @@ public class SimpleTeams {
             UUID playerUUID = player.getUniqueID();
 
             if (args.length < 1) {
-                sender.sendMessage(new TextComponentString(TextFormatting.RED + "/team <create|invite|invites|toggle|join|leave|changeowner|info|kick|ban|unban>"));
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + "/team <create|join|leave|invite|toggle|kick|ban|unban|info|changeowner|invites>"));
                 return;
             }
+
+            String ownerName;
+            String teamName;
+            String targetPlayerName;
+            EntityPlayer targetPlayer;
+            SimpleTeams.Team currentTeam;
 
             switch (args[0].toLowerCase()) {
                 case "create":
@@ -123,12 +135,12 @@ public class SimpleTeams {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team create [teamName]"));
                         return;
                     }
-                    String teamName = args[1];
+                    teamName = args[1];
                     if (teams.containsKey(teamName)) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "A team with that name already exists."));
                         return;
                     }
-                    String ownerName = player.getName();
+                    ownerName = player.getName();
                     teams.put(teamName, new SimpleTeams.Team(teamName, playerUUID, ownerName));
                     playerTeams.put(playerUUID, teamName);
                     sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Team " + teamName + " created!"));
@@ -150,7 +162,7 @@ public class SimpleTeams {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not in a team."));
                         return;
                     }
-                    SimpleTeams.Team currentTeam = teams.get(playerTeams.get(playerUUID));
+                    currentTeam = teams.get(playerTeams.get(playerUUID));
 
                     if (!currentTeam.isOwner(playerUUID)) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not the team owner."));
@@ -172,8 +184,8 @@ public class SimpleTeams {
                         return;
                     }
 
-                    String targetPlayerName = args[1];
-                    EntityPlayer targetPlayer = server.getPlayerList().getPlayerByUsername(targetPlayerName);
+                    targetPlayerName = args[1];
+                    targetPlayer = server.getPlayerList().getPlayerByUsername(targetPlayerName);
                     if (targetPlayer == null) {
                         sender.sendMessage(new TextComponentString(TextFormatting.RED + "Player not found."));
                         return;

@@ -20,7 +20,7 @@ public class DamageHandler {
             String team = playerTeams.getOrDefault(attacker.getUniqueID(), null);
             if (team != null && !teams.get(team).isFriendlyFireEnabled()) {
                 EntityPlayer target = (EntityPlayer) event.getEntityLiving();
-                if (SimpleTeams.Team.arePlayersInSameTeam(attacker, target)) {
+                if (SimpleTeams.Team.arePlayersInSameTeam(attacker, target) && attacker != target) {
                     event.setCanceled(true); // Cancel damage if in the same team
                 }
             }
