@@ -21,7 +21,7 @@
 ## Commands:
 
 - **/team create [TeamName]** <br />
-    Creates a team with the specified name. Newly created teams are private by default. Newly created teams have friendly fire turned off by default. The player that created the team is the team owner by default.
+    Creates a team with the specified name. Newly created teams are private by default. Newly created teams have friendly fire turned off by default. The player that created the team is the team owner by default. Team names are case sensitive.
 
 - **/team join [TeamName]** <br />
     If the specified team is public, using this command will join the specified team if the player is not already in a team. If a team is NOT public, the player needs an invite first.
