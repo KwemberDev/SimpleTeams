@@ -26,7 +26,7 @@ import java.util.*;
 @Mod(modid = SimpleTeams.MODID, version = SimpleTeams.VERSION, name = SimpleTeams.NAME, serverSideOnly = true, acceptableRemoteVersions = "*")
 public class SimpleTeams {
     public static final String MODID = "simpleteams";
-    public static final String VERSION = "0.0.4";
+    public static final String VERSION = "0.0.5";
     public static final String NAME = "SimpleTeams";
     public static final Logger LOGGER = LogManager.getLogger();
 
@@ -44,6 +44,7 @@ public class SimpleTeams {
     public void onServerStarting(FMLServerStartingEvent event) {
         loadTeams();
         event.registerServerCommand(new TeamCommand());
+        event.registerServerCommand(new TeamChatCommand());
         MinecraftForge.EVENT_BUS.register(this);
         MinecraftForge.EVENT_BUS.register(new DamageHandler());
     }
@@ -491,8 +492,74 @@ public class SimpleTeams {
                 }
             }
         }
+    }
 
+    public static class TeamChatCommand extends CommandBase {
 
+        @Override
+        public String getName() {
+            return "teamchat";
+        }
+
+        @Override
+        public String getUsage(ICommandSender sender) {
+            return "/teamchat <message>";
+        }
+
+        @Override
+        public int getRequiredPermissionLevel() {
+            return 0; // Allow all players to use this command
+        }
+
+        @Override
+        public boolean checkPermission(MinecraftServer server, ICommandSender sender) {
+            return true;
+        }
+
+        @Override
+        public List<String> getAliases() {
+            return Arrays.asList("tc", "tchat");
+        }
+
+        @Override
+        public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+            if (!(sender instanceof EntityPlayer)) {
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + "This command can only be used by players."));
+                return;
+            }
+
+            EntityPlayer player = (EntityPlayer) sender;
+            UUID playerUUID = player.getUniqueID();
+
+            if (!SimpleTeams.playerTeams.containsKey(playerUUID)) {
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not in a team."));
+                return;
+            }
+
+            if (args.length < 1) {
+                sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /teamchat <message>"));
+                return;
+            }
+
+            String teamName = SimpleTeams.playerTeams.get(playerUUID);
+            SimpleTeams.Team currentTeam = SimpleTeams.teams.get(teamName);
+
+            String message = String.join(" ", args);
+            String teamChatMessage = TextFormatting.AQUA + "[" + TextFormatting.GOLD + "Team" + TextFormatting.GREEN + "Chat" + TextFormatting.AQUA + "] " + TextFormatting.GOLD + player.getName() + TextFormatting.GREEN + ": " + message;
+
+            sendMessageToTeamMembers(server, teamChatMessage, currentTeam);
+        }
+
+        private void sendMessageToTeamMembers(MinecraftServer server, String message, SimpleTeams.Team currentTeam) {
+            for (Map.Entry<UUID, String> entry : SimpleTeams.playerTeams.entrySet()) {
+                if (entry.getValue().equals(currentTeam.name)) {
+                    EntityPlayer member = server.getPlayerList().getPlayerByUUID(entry.getKey());
+                    if (member != null) {
+                        member.sendMessage(new TextComponentString(message));
+                    }
+                }
+            }
+        }
     }
 
     public static class Team implements Serializable {
