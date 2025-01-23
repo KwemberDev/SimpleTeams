@@ -6,7 +6,7 @@
 -   Direct hits, sword or other.
 -   Arrows fired by a player.
 -   TNT ignited by a player (with flint and steel or arrow).
--   Indirect sweeping attacks by a player.
+-   Harming potions thrown by a team member.
 -   Any other attack where the True Damage source is a team member.
 
 ### Damage sources that WILL damage the player even when they come from a team member include but not limited to:
@@ -16,6 +16,8 @@
 -   Arrows fired from a dispenser activated by a player.
 -   Any other way you might want to prank your friend.
 
+
+**Keep in mind that you can still damage yourself with your own attacks.**
 
 
 ## Commands:
