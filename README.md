@@ -31,6 +31,9 @@
 - **/team leave** <br />
     Leaves your current team. If you are the owner of the team and your team is not empty, you cannot leave the team until all members have been kicked or have left, or until you have tranfered ownership of the team to another team member.
 
+- **/teamchat | /tchat | /tc** <br />
+    Team chat function to send a message to all players in your team that are online.
+
 - **/team invite [PlayerName]** <br />
     Invite the specified player to your team. <br />
     This command can only be used by the team owner.
