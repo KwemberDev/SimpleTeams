@@ -1,0 +1,13 @@
+message.simpleteams.senderNotPlayer=This command can only be used by players.
+message.simpleteams.usage=§c/team <create|join|leave|invite|toggle|kick|ban|unban|info|changeowner|invites>
+message.simpleteams.create.usage=§cUsage: /team create [teamName]
+message.simpleteams.create.exists=§cA team with that name already exists.
+message.simpleteams.create.success=§6Team %s created!
+message.simpleteams.invite.usage=§cUsage: /team invite [playerName]
+message.simpleteams.invite.noPlayer=§cPlayer not found.
+message.simpleteams.invite.noTeam=§cYou are not in a team.
+message.simpleteams.invite.notOwner=§cYou are not the team owner.
+message.simpleteams.invite.isBanned=§c %s is banned from this team and cannot be invited.
+message.simpleteams.invite.invitee=§6You have been invited to join team %s.
+message.simpleteams.invite.sender=§6Player invited.
+message.simpleteams.kick.usage=§cUsage: /team kick <teamMember>

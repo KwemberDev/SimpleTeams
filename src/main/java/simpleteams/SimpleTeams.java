@@ -6,6 +6,7 @@ import net.minecraft.command.ICommandSender;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.text.TextComponentString;
+import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.util.text.TextFormatting;
 import net.minecraftforge.event.entity.EntityJoinWorldEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -112,7 +113,7 @@ public class SimpleTeams {
         @ParametersAreNonnullByDefault
         public void execute(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
             if (!(sender instanceof EntityPlayer)) {
-                sender.sendMessage(new TextComponentString("This command can only be used by players."));
+                sender.sendMessage(new TextComponentTranslation("message.simpleteams.senderNotPlayer"));
                 return;
             }
 
@@ -120,7 +121,7 @@ public class SimpleTeams {
             UUID playerUUID = player.getUniqueID();
 
             if (args.length < 1) {
-                sender.sendMessage(new TextComponentString(TextFormatting.RED + "/team <create|join|leave|invite|toggle|kick|ban|unban|info|changeowner|invites>"));
+                sender.sendMessage(new TextComponentTranslation("message.simpleteams.usage"));
                 return;
             }
 
@@ -133,55 +134,55 @@ public class SimpleTeams {
             switch (args[0].toLowerCase()) {
                 case "create":
                     if (args.length < 2) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team create [teamName]"));
+                        sender.sendMessage(new TextComponentTranslation("message.simpleteams.create.usage"));
                         return;
                     }
                     teamName = args[1];
                     if (teams.containsKey(teamName)) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "A team with that name already exists."));
+                        sender.sendMessage(new TextComponentTranslation("message.simpleteams.create.exists"));
                         return;
                     }
                     ownerName = player.getName();
                     teams.put(teamName, new SimpleTeams.Team(teamName, playerUUID, ownerName));
                     playerTeams.put(playerUUID, teamName);
-                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Team " + teamName + " created!"));
+                    sender.sendMessage(new TextComponentTranslation("message.simpleteams.create.success", teamName));
                     break;
 
                 case "invite":
                     if (args.length < 2) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team invite [playerName]"));
+                        sender.sendMessage(new TextComponentTranslation("message.simpleteams.invite.usage"));
                         return;
                     }
                     String inviteeName = args[1];
                     EntityPlayer invitee = server.getPlayerList().getPlayerByUsername(inviteeName);
                     if (invitee == null) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Player not found."));
+                        sender.sendMessage(new TextComponentTranslation("message.simpleteams.invite.noPlayer"));
                         return;
                     }
 
                     if (!playerTeams.containsKey(playerUUID)) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not in a team."));
+                        sender.sendMessage(new TextComponentTranslation("message.simpleteams.invite.noTeam"));
                         return;
                     }
                     currentTeam = teams.get(playerTeams.get(playerUUID));
 
                     if (!currentTeam.isOwner(playerUUID)) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "You are not the team owner."));
+                        sender.sendMessage(new TextComponentTranslation("message.simpleteams.invite.notOwner"));
                         return;
                     }
 
                     if (currentTeam.isPlayerBanned(invitee.getUniqueID())) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + invitee.getName() + " is banned from this team and cannot be invited."));
+                        sender.sendMessage(new TextComponentTranslation("message.simpleteams.invite.isBanned",invitee.getName()));
                         return;
                     }
                     pendingInvites.get(invitee.getUniqueID()).add(currentTeam.name);
-                    invitee.sendMessage(new TextComponentString(TextFormatting.GOLD + "You have been invited to join team " + currentTeam.name + "."));
-                    sender.sendMessage(new TextComponentString(TextFormatting.GOLD + "Player invited."));
+                    invitee.sendMessage(new TextComponentTranslation("message.simpleteams.invite.invitee", currentTeam.name));
+                    sender.sendMessage(new TextComponentTranslation("message.simpleteams.invite.sender"));
                     break;
 
                 case "kick":
                     if (args.length < 2) {
-                        sender.sendMessage(new TextComponentString(TextFormatting.RED + "Usage: /team kick <teamMember>"));
+                        sender.sendMessage(new TextComponentTranslation("message.simpleteams.kick.usage"));
                         return;
                     }
 
